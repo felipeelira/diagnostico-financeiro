@@ -1,0 +1,829 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Diagnóstico Financeiro</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* === TOKENS === */
+/* Layout: fluxo linear, pergunta única por vez, resultado ao final */
+:root {
+  --bg: #F4F6FA;
+  --bg2: #E8ECF4;
+  --fg: #0D1B2A;
+  --fg2: #3A4A5C;
+  --fg3: #8A9AB0;
+  --navy: #0D2250;
+  --navy2: #071640;
+  --gold: #C9962A;
+  --gold2: #A87820;
+  --gold-light: #FBF4E3;
+  --accent: #0D2250;
+  --accent2: #071640;
+  --accent-light: #E8ECF6;
+  --danger: #C0392B;
+  --danger-light: #FDECEA;
+  --warn: #B8860B;
+  --warn-light: #FEF9E7;
+  --ok: #1B6B3A;
+  --ok-light: #E8F4ED;
+  --card: #FFFFFF;
+  --border: #D8DDE8;
+  --radius: 12px;
+  --shadow: 0 2px 14px rgba(13,34,80,0.09);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #080E1A;
+    --bg2: #0F1826;
+    --fg: #EEF2F8;
+    --fg2: #9AAABF;
+    --fg3: #5A6A80;
+    --navy: #3A6ACD;
+    --navy2: #2A54B0;
+    --gold: #D4A83A;
+    --gold2: #B88C20;
+    --gold-light: #1E1800;
+    --accent: #3A6ACD;
+    --accent2: #2A54B0;
+    --accent-light: #0A1428;
+    --danger: #E05242;
+    --danger-light: #2A1210;
+    --warn: #D4A017;
+    --warn-light: #2A2008;
+    --ok: #2EAF60;
+    --ok-light: #0F2318;
+    --card: #0F1826;
+    --border: #1E2E44;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#080E1A;--bg2:#0F1826;--fg:#EEF2F8;--fg2:#9AAABF;--fg3:#5A6A80;
+  --navy:#3A6ACD;--navy2:#2A54B0;--gold:#D4A83A;--gold2:#B88C20;
+  --gold-light:#1E1800;--accent:#3A6ACD;--accent2:#2A54B0;
+  --accent-light:#0A1428;--danger:#E05242;--danger-light:#2A1210;
+  --warn:#D4A017;--warn-light:#2A2008;--ok:#2EAF60;--ok-light:#0F2318;
+  --card:#0F1826;--border:#1E2E44;color-scheme:dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+  min-height: 100%;
+}
+
+#app {
+  max-width: 640px;
+  margin: 0 auto;
+  padding-block: 32px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* === HEADER === */
+.header {
+  text-align: center;
+  padding-block: 8px;
+}
+.logo-wrap {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.logo-img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(13,34,80,0.18));
+}
+.logo-text-block { text-align: left; }
+.logo-brand {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.logo-sub {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.header-divider {
+  width: 48px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--navy), var(--gold));
+  border-radius: 2px;
+  margin: 16px auto;
+}
+.header h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(20px, 5vw, 28px);
+  font-weight: 700;
+  color: var(--fg);
+  margin: 0 0 10px;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+.header p {
+  color: var(--fg2);
+  font-size: 15px;
+  margin: 0;
+  max-width: 480px;
+  margin-inline: auto;
+}
+
+/* === PROGRESS === */
+.progress-bar {
+  background: var(--bg2);
+  border-radius: 100px;
+  height: 6px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--navy), var(--gold));
+  border-radius: 100px;
+  transition: width 0.4s ease;
+}
+.progress-label {
+  font-size: 13px;
+  color: var(--fg3);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* === CARD DE PERGUNTA === */
+.question-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 28px;
+  box-shadow: var(--shadow);
+}
+.question-num {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+.question-text {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(16px, 3vw, 19px);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--fg);
+  margin: 0 0 24px;
+  text-wrap: balance;
+}
+.answer-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.answer-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+/* hover only on real pointer devices, not touch */
+@media (hover: hover) {
+  .answer-btn.yes:hover { border-color: var(--ok); background: var(--ok-light); color: var(--ok); }
+  .answer-btn.no:hover  { border-color: var(--danger); background: var(--danger-light); color: var(--danger); }
+}
+.answer-btn.yes.selected { border-color: var(--ok); background: var(--ok-light); color: var(--ok); }
+.answer-btn.no.selected  { border-color: var(--danger); background: var(--danger-light); color: var(--danger); }
+.answer-btn .icon { font-size: 18px; }
+.answer-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.back-row { display: flex; justify-content: center; margin-top: 4px; }
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--fg3);
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+.back-btn:hover { color: var(--navy); background: var(--accent-light); }
+.back-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* === RESULTADO === */
+#result { display: none; flex-direction: column; gap: 20px; }
+
+/* score header com banner navy */
+.score-banner {
+  background: var(--navy);
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 24px 28px 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.score-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(201,150,42,0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+.score-banner-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 16px;
+}
+.score-ring {
+  width: 110px;
+  height: 110px;
+  margin: 0 auto 16px;
+  position: relative;
+}
+.score-ring svg { width: 110px; height: 110px; transform: rotate(-90deg); }
+.score-ring .track { fill: none; stroke: rgba(255,255,255,0.12); stroke-width: 10; }
+.score-ring .fill { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+.score-num {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.score-num span {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: white;
+  line-height: 1;
+}
+.score-num small { font-size: 12px; color: rgba(255,255,255,0.55); }
+
+.score-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.score-body {
+  padding: 24px 28px;
+  text-align: center;
+  border-top: none;
+}
+.score-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 21px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--fg);
+}
+.score-desc { color: var(--fg2); font-size: 15px; margin: 0; }
+
+/* nível badge */
+.level-badge {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.level-green  { background: var(--ok-light);    color: var(--ok); }
+.level-yellow { background: var(--warn-light);  color: var(--warn); }
+.level-red    { background: var(--danger-light); color: var(--danger); }
+
+/* pontos de atenção */
+.issues-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  box-shadow: var(--shadow);
+}
+.issues-card h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 16px;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.issue-item {
+  border-bottom: 1px solid var(--border);
+}
+.issue-item:last-child { border-bottom: none; }
+.issue-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.issue-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+  flex-shrink: 0;
+}
+.issue-cat {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy);
+  flex: 1;
+}
+.issue-toggle {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gold);
+  background: transparent;
+  color: var(--gold);
+  font-size: 16px;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.25s, background 0.25s;
+  cursor: pointer;
+  padding: 0;
+}
+.issue-item.open .issue-toggle {
+  background: var(--gold);
+  color: #fff;
+  transform: rotate(45deg);
+}
+.issue-body {
+  display: none;
+  padding: 0 0 14px 17px;
+}
+.issue-item.open .issue-body { display: block; }
+.issue-question {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg2);
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+.issue-insight {
+  font-size: 13px;
+  color: var(--fg2);
+  line-height: 1.6;
+  border-left: 3px solid var(--gold);
+  padding-left: 10px;
+}
+
+/* CTA */
+.cta-card {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+  border-radius: var(--radius);
+  padding: 32px 28px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.cta-card::before {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  background: rgba(201,150,42,0.12);
+  pointer-events: none;
+}
+.cta-card h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: white;
+}
+.cta-card p { margin: 0 0 24px; font-size: 14px; color: rgba(255,255,255,0.8); }
+.cta-offer {
+  position: relative;
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid var(--gold);
+  border-radius: 10px;
+  padding: 18px 16px 16px;
+  text-align: left;
+}
+.cta-offer-tag {
+  display: inline-block;
+  background: var(--gold);
+  color: #0D2250;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+.cta-offer-text { font-size: 15px; line-height: 1.55; color: #fff; }
+.cta-offer-text strong { color: var(--gold); }
+.cta-offer-note { margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.65); }
+.cta-btn {
+  display: inline-block;
+  background: var(--gold);
+  color: #0D1B2A;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 13px 28px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+  letter-spacing: 0.01em;
+}
+.cta-btn:hover { background: var(--gold2); transform: translateY(-1px); }
+.cta-contact {
+  margin-top: 16px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+}
+.cta-contact strong { color: rgba(255,255,255,0.9); }
+
+/* restart */
+.restart-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg2);
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: block;
+  margin: 0 auto;
+  font-family: 'Inter', sans-serif;
+}
+.restart-btn:hover { background: var(--bg2); }
+
+/* db notice */
+.db-notice {
+  background: var(--gold-light);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--gold2);
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+
+/* === INTRO === */
+#intro {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 32px 28px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.intro-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.intro-tag {
+  background: var(--accent-light);
+  border-radius: 100px;
+  padding: 5px 12px;
+  font-size: 12px;
+  color: var(--navy);
+  font-weight: 600;
+  border: 1px solid var(--border);
+}
+.start-btn {
+  background: var(--navy);
+  color: white;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 15px 36px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.15s;
+  letter-spacing: 0.01em;
+}
+.start-btn:hover { background: var(--navy2); }
+.start-btn span {
+  display: inline-block;
+  color: var(--gold);
+  margin-left: 6px;
+}
+
+@media (max-width: 480px) {
+  #app { padding-block: 20px; gap: 16px; }
+  .question-card, .score-body, .issues-card, .cta-card, #intro { padding: 20px; }
+  .score-banner { padding: 20px; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <h1>Diagnóstico de Saúde Financeira</h1>
+    <p>15 perguntas. 3 minutos. Descubra onde a sua empresa está deixando dinheiro na mesa.</p>
+  </div>
+
+  <div id="intro">
+    <div class="intro-tags">
+      <span class="intro-tag">✓ Sem cadastro</span>
+      <span class="intro-tag">✓ Resultado imediato</span>
+      <span class="intro-tag">✓ 100% gratuito</span>
+      <span class="intro-tag">✓ 15 perguntas Sim/Não</span>
+    </div>
+    <button class="start-btn" onclick="startQuiz()">Iniciar diagnóstico <span>→</span></button>
+  </div>
+
+  <div id="quiz" style="display:none; flex-direction:column; gap:20px;">
+    <div>
+      <div class="progress-label">
+        <span id="prog-text">Pergunta 1 de 15</span>
+        <span id="prog-pct">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    </div>
+    <div class="question-card">
+      <div class="question-num" id="q-num">Pergunta 1, Fluxo de Caixa</div>
+      <div class="question-text" id="q-text"></div>
+      <div class="answer-row">
+        <button class="answer-btn yes" id="btn-yes" onclick="answer(true)"><span class="icon">✓</span> Sim</button>
+        <button class="answer-btn no"  id="btn-no"  onclick="answer(false)"><span class="icon">✗</span> Não</button>
+      </div>
+      <div class="back-row">
+        <button class="back-btn" id="btn-back" onclick="goBack()">← Voltar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="result">
+    <div class="score-card">
+      <div class="score-banner">
+        <div class="score-banner-label">Pontuação de saúde financeira</div>
+        <div class="score-ring">
+          <svg viewBox="0 0 110 110">
+            <circle class="track" cx="55" cy="55" r="45"/>
+            <circle class="fill" id="score-arc" cx="55" cy="55" r="45"
+              stroke-dasharray="283" stroke-dashoffset="283"/>
+          </svg>
+          <div class="score-num">
+            <span id="score-val">0</span>
+            <small>de 15</small>
+          </div>
+        </div>
+      </div>
+      <div class="score-body">
+        <div class="level-badge" id="level-badge"></div>
+        <h2 class="score-title" id="score-title"></h2>
+        <p class="score-desc" id="score-desc"></p>
+      </div>
+    </div>
+
+    <div class="issues-card" id="issues-block">
+      <h3>Pontos que precisam de atenção</h3>
+      <div id="issues-list"></div>
+    </div>
+
+
+    <div class="cta-card">
+      <h3>Você não precisa resolver isso sozinho</h3>
+      <p id="cta-text"></p>
+      <div class="cta-offer">
+        <div class="cta-offer-tag" id="cta-date">Somente hoje</div>
+        <div class="cta-offer-text">Procure o consultor presente nesta reunião e agende uma <strong>consulta gratuita</strong> para analisar os pontos críticos da sua empresa.</div>
+        <div class="cta-offer-note">Condição válida apenas para quem agendar hoje.</div>
+      </div>
+    </div>
+
+    <button class="restart-btn" onclick="restart()">↩ Refazer diagnóstico</button>
+  </div>
+
+  <div class="db-notice" id="db-notice">✓ Suas respostas foram registradas.</div>
+</div>
+
+<script>
+const QUESTIONS = [
+  { cat: "Fluxo de Caixa", label: "Visibilidade de Caixa", text: "Você sabe, sem precisar consultar planilhas, quanto dinheiro vai entrar e sair da empresa nos próximos 30 dias?",
+    insight: "Gestão de caixa às cegas é a principal causa de morte de empresas lucrativas no papel. Sem visibilidade de entrada e saída dos próximos 30 dias, qualquer imprevisto, um fornecedor antecipado, uma inadimplência ou uma queda de faturamento, pode travar sua operação antes que você perceba. Empresas que monitoram o caixa com previsão prosperam; as que não monitoram costumam pedir empréstimo de emergência com juros que consomem meses de lucro." },
+  { cat: "Fluxo de Caixa", label: "Projeção Semanal", text: "Sua empresa tem um fluxo de caixa projetado atualizado ao menos semanalmente?",
+    insight: "Um fluxo de caixa desatualizado é pior do que nenhum: gera falsa sensação de controle. Empresas que atualizam a projeção semanalmente identificam gargalos com até 3 semanas de antecedência e negociam prazos no momento certo, não sob pressão. As que não atualizam descobrem o problema quando o saldo já está negativo, e aí as opções se reduzem a cheque especial, atraso de fornecedor ou desconto precipitado de duplicatas." },
+  { cat: "Controle de Custos", label: "Custo Fixo Exato", text: "Você conhece o custo fixo mensal exato da sua operação, sem arredondamentos?",
+    insight: "Não saber o custo fixo real significa não saber o ponto de equilíbrio. Sem isso, qualquer precificação é um chute. Empresas que operam sem essa clareza costumam descobrir que estão no vermelho só quando o banco avisa. Conhecer o custo fixo com precisão é o primeiro passo para saber quanto precisa faturar para sobreviver e quanto precisa faturar para crescer." },
+  { cat: "Controle de Custos", label: "Revisão de Despesas", text: "Você revisa as despesas mensalmente e elimina gastos que não geram resultado?",
+    insight: "Custos que não são revisados crescem sozinhos. Assinaturas esquecidas, contratos renovados automaticamente, fornecedores que nunca foram renegociados, cada item parece pequeno, mas o conjunto pode representar 10% a 20% do custo fixo sendo desperdiçado. Empresas que revisam mensalmente mantêm a estrutura enxuta e têm mais margem disponível para investir em crescimento ou enfrentar crises." },
+  { cat: "Precificação", label: "Margem de Contribuição", text: "Você sabe com precisão qual é a margem de contribuição de cada produto ou serviço que vende?",
+    insight: "Vender bastante sem saber a margem de cada produto pode significar trabalhar muito para lucrar pouco, ou até operar no prejuízo sem perceber. A margem de contribuição revela quais produtos sustentam o negócio e quais drenam recursos. Sem ela, decisões de mix de vendas e foco comercial são feitas no escuro, e o esforço vai para onde não deveria." },
+  { cat: "Precificação", label: "Modelo de Precificação", text: "O preço dos seus produtos ou serviços está baseado em custo real mais margem definida, e não na intuição ou na concorrência?",
+    insight: "Precificar pela concorrência é uma armadilha: você não sabe a estrutura de custo deles. Se o concorrente cobra barato porque tem escala ou eficiência que você não tem, copiar o preço dele significa trabalhar no prejuízo. Precificação baseada em custo real garante que cada venda contribui positivamente para o negócio e elimina a incerteza de não saber se está ganhando ou perdendo dinheiro em cada contrato." },
+  { cat: "DRE / Resultado", label: "DRE Mensal", text: "Você tem um DRE (Demonstrativo de Resultado) atualizado todo mês?",
+    insight: "Sem DRE mensal, você está gerindo uma empresa de olho no retrovisor. A demonstração de resultado é o mapa que mostra se o negócio está gerando riqueza ou consumindo patrimônio. Decisões de expansão, contratação ou corte feitas sem esse relatório são apostas, não estratégia. Bancos e investidores exigem DRE porque sabem que quem não mede não gerencia." },
+  { cat: "DRE / Resultado", label: "Lucro vs. Pró-labore", text: "Você consegue distinguir claramente o lucro do negócio do seu pró-labore pessoal?",
+    insight: "Misturar remuneração pessoal com resultado da empresa é um dos erros mais comuns em PMEs, e um dos mais perigosos. Sem essa separação, o empresário não sabe se está sendo sustentado pelo lucro ou corroendo o capital da empresa. Negócios que confundem as duas coisas frequentemente descobrem que estão crescendo no faturamento e encolhendo no patrimônio, sem entender por quê." },
+  { cat: "Inadimplência", label: "Régua de Cobrança", text: "Você tem um processo definido para cobrança de clientes em atraso, com régua de comunicação?",
+    insight: "Cobrança feita na base do improviso recupera menos dinheiro e demora mais. Uma régua de comunicação estruturada, com mensagens automáticas nos dias 1, 7 e 15 de atraso, por exemplo, aumenta a taxa de recuperação em até 3 vezes. Empresas sem processo de cobrança acabam evitando o contato por desconforto, e o cliente que poderia pagar vai postergando indefinidamente enquanto o caixa da empresa sangra." },
+  { cat: "Inadimplência", label: "Taxa de Inadimplência", text: "A taxa de inadimplência da sua empresa está abaixo de 5% do faturamento?",
+    insight: "Inadimplência acima de 5% do faturamento é sinal de alerta vermelho. Significa que para cada R00 faturados, R ou mais não entram no caixa. Dependendo da margem do negócio, isso pode anular completamente o lucro do mês. Empresas que não monitoram esse indicador frequentemente descobrem que o faturamento cresceu, mas o caixa não acompanhou, e a causa é uma carteira de recebíveis podre acumulada ao longo do tempo." },
+  { cat: "Planejamento", label: "Metas e Acompanhamento", text: "Você define metas financeiras no início do ano e acompanha o resultado mensalmente?",
+    insight: "Negócio sem meta financeira anual opera no modo reativo: resolve crises em vez de construir crescimento. Empresas que definem metas e acompanham mensalmente identificam desvios a tempo de corrigir, tomam decisões de investimento com base em dados e constroem uma cultura de resultado. As que não planejam costumam chegar ao fim do ano surpresas com o resultado, e raramente a surpresa é positiva." },
+  { cat: "Planejamento", label: "Reserva de Emergência", text: "Sua empresa tem reserva de emergência equivalente a pelo menos 2 meses de custo fixo?",
+    insight: "A reserva de emergência é o que separa uma empresa resiliente de uma empresa frágil. Sem ela, qualquer imprevisto, perda de um cliente grande, equipamento quebrado, queda sazonal, força decisões ruins sob pressão: empréstimo caro, venda com desconto, demissão precipitada. Dois meses de custo fixo em reserva garantem tempo para reagir com estratégia em vez de desespero." },
+  { cat: "Rotina Financeira", label: "Responsável pelo Fechamento", text: "Existe uma pessoa responsável (interna ou externa) pelo fechamento financeiro mensal da empresa?",
+    insight: "Responsabilidade compartilhada por todos é responsabilidade de ninguém. Sem um responsável claro pelo fechamento financeiro, os números do mês não fecham, relatórios atrasam e decisões são tomadas com base em estimativas. Uma pessoa dedicada a essa rotina, seja interna ou um contador/consultor, garante que as informações estejam disponíveis no momento certo para as decisões certas." },
+  { cat: "Rotina Financeira", label: "Separação de Contas", text: "As contas pessoais e as contas da empresa estão completamente separadas?",
+    insight: "Misturar contas pessoais e empresariais é a raiz de boa parte dos problemas financeiros de PMEs. Além de dificultar qualquer análise de resultado real, essa prática cria passivos fiscais, impede o acesso a crédito empresarial e mascara o quanto o sócio realmente retira do negócio. Bancos recusam crédito empresarial quando identificam essa mistura, e o custo de capital aumenta drasticamente como consequência." },
+  { cat: "Visão Geral", label: "Prontidão do Balanço", text: "Se um banco pedisse o balanço financeiro da sua empresa hoje, você conseguiria entregar em menos de 48 horas?",
+    insight: "A capacidade de apresentar o balanço financeiro em 48 horas é o termômetro da maturidade financeira de uma empresa. Quem não consegue está, na prática, sem controle real do próprio negócio. Além do crédito bancário, essa organização é exigida por sócios, investidores e até grandes clientes. Empresas organizadas financeiramente têm acesso a capital mais barato, negociam melhores condições e transmitem credibilidade no mercado." },
+];
+
+const LEVELS = [
+  { min:12, label:"Saúde Financeira Sólida",    arc:"#C9962A", badge:"level-green",  emoji:"🟢",
+    desc:"Sua empresa tem uma base financeira consistente. Pequenos ajustes podem elevar ainda mais a performance." },
+  { min:8,  label:"Atenção Necessária",          arc:"#C9962A", badge:"level-yellow", emoji:"🟡",
+    desc:"Existem pontos críticos que, se não endereçados, podem travar o crescimento nos próximos meses." },
+  { min:0,  label:"Saúde Financeira em Risco",   arc:"#E05242", badge:"level-red",    emoji:"🔴",
+    desc:"Sua empresa opera com alto risco financeiro. Intervenção estruturada é urgente para evitar problemas maiores." },
+];
+
+let current = 0, answers = [];
+
+function startQuiz() {
+  current = 0; answers = [];
+  document.getElementById('intro').style.display = 'none';
+  const q = document.getElementById('quiz');
+  q.style.display = 'flex';
+  showQuestion();
+}
+
+function showQuestion() {
+  const q = QUESTIONS[current];
+  document.getElementById('q-num').textContent = `Pergunta ${current + 1} de ${QUESTIONS.length}, ${q.cat}`;
+  document.getElementById('q-text').textContent = q.text;
+  const pct = Math.round((current / QUESTIONS.length) * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-text').textContent = `Pergunta ${current + 1} de ${QUESTIONS.length}`;
+  document.getElementById('prog-pct').textContent = pct + '%';
+  // Reset buttons unconditionally
+  const bY = document.getElementById('btn-yes');
+  const bN = document.getElementById('btn-no');
+  bY.className = 'answer-btn yes'; bY.disabled = false; bY.blur();
+  bN.className = 'answer-btn no';  bN.disabled = false; bN.blur();
+  // Back button: disable on first question
+  document.getElementById('btn-back').disabled = current === 0;
+}
+
+function answer(yes) {
+  answers[current] = yes ? 1 : 0;
+  // Advance immediately
+  current++;
+  if (current < QUESTIONS.length) showQuestion();
+  else showResult();
+}
+
+function goBack() {
+  if (current === 0) return;
+  current--;
+  answers.splice(current, 1);
+  showQuestion();
+}
+
+function showResult() {
+  document.getElementById('quiz').style.display = 'none';
+  const r = document.getElementById('result');
+  r.style.display = 'flex';
+  r.style.flexDirection = 'column';
+  r.style.gap = '20px';
+
+  const score = answers.reduce((a, b) => a + b, 0);
+  const level = LEVELS.find(l => score >= l.min);
+  const circumference = 283;
+
+  const arc = document.getElementById('score-arc');
+  arc.style.stroke = level.arc;
+  setTimeout(() => {
+    arc.style.strokeDashoffset = circumference - (circumference * score / QUESTIONS.length);
+  }, 100);
+
+  document.getElementById('score-val').textContent = score;
+  const badge = document.getElementById('level-badge');
+  badge.textContent = level.emoji + ' ' + level.label;
+  badge.className = 'level-badge ' + level.badge;
+  document.getElementById('score-title').textContent = level.label;
+  document.getElementById('score-desc').textContent = level.desc;
+
+  const issues = answers.map((a, i) => ({ answered: a, q: QUESTIONS[i] })).filter(x => x.answered === 0);
+  if (issues.length === 0) {
+    document.getElementById('issues-block').style.display = 'none';
+  } else {
+    document.getElementById('issues-list').innerHTML = issues.map((x, i) => {
+      const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+      return `<div class="issue-item" id="issue-${i}">
+        <div class="issue-header" onclick="toggleIssue(${i})">
+          <div class="issue-dot"></div>
+          <div class="issue-cat">${esc(x.q.label || x.q.cat)}</div>
+          <button class="issue-toggle" aria-label="Expandir" onclick="event.stopPropagation();toggleIssue(${i})">+</button>
+        </div>
+        <div class="issue-body">
+          <div class="issue-question">${esc(x.q.text)}</div>
+          <div class="issue-insight">${esc(x.q.insight || "")}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  const n = issues.length;
+  document.getElementById('cta-text').textContent = n === 0
+    ? 'Sua base está sólida. Uma análise de fora ajuda a encontrar ganhos de margem e caixa que a rotina não deixa enxergar.'
+    : (n === 1
+      ? 'O ponto de atenção que apareceu aqui tem solução. Quanto antes for tratado, menor o custo de corrigir.'
+      : `Os ${n} pontos de atenção que apareceram aqui têm solução. Quanto antes forem tratados, menor o custo de corrigir.`);
+  const d = new Date();
+  document.getElementById('cta-date').textContent = 'Somente hoje, ' + String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
+
+  saveToDb(score, issues.length);
+}
+
+function toggleIssue(i) {
+  const el = document.getElementById('issue-' + i);
+  if (el) el.classList.toggle('open');
+}
+
+async function saveToDb(score, issues) {
+  try {
+    const db = await claude.use("db");
+    if (!db) return;
+    const id = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+    await db.doc('respostas/' + id).set({
+      score, total: QUESTIONS.length, issues,
+      answers: answers.map((a, i) => ({ cat: QUESTIONS[i].cat, yes: a === 1 })),
+      ts: new Date().toISOString()
+    });
+    const n = document.getElementById('db-notice');
+    n.style.display = 'flex';
+    setTimeout(() => { n.style.display = 'none'; }, 4000);
+  } catch(e) {}
+}
+
+function restart() {
+  current = 0; answers = [];
+  document.getElementById('result').style.display = 'none';
+  const q = document.getElementById('quiz');
+  q.style.display = 'flex';
+  showQuestion();
+}
+</script>
+</body>
+</html>
